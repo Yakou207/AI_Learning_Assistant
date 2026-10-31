@@ -140,8 +140,61 @@ def build_essay_html_prompt(
 ) -> tuple[str, str]:
     system_prompt = (
         "You are an expert teaching assistant writing complete academic essay and "
-        "report deliverables as self-contained HTML documents. Return only the "
-        "requested HTML source, with no surrounding explanation."
+        "report deliverables as self-contained HTML documents. You are also an "
+        "experienced cloud engineer who can explain deployments clearly to a "
+        "university marker. Return only the requested HTML source, with no "
+        "surrounding explanation."
+    )
+    report_instruction = (
+        "Decide whether the task asks for an essay or for a technical report. "
+        "When it asks for a technical, lab, deployment, or assignment report, "
+        "follow these rules.\n"
+        "1. Structure: a title block (title, course, author details only if "
+        "provided, date); a short executive summary; an overall architecture "
+        "section; one section per assignment task in the order the task lists "
+        "them; a security and cost analysis; limitations and improvements; a "
+        "conclusion; and an appendix only if evidence would otherwise crowd the "
+        "main text. Number sections and figures (Figure 1, Figure 2, ...) and "
+        "tables (Table 1, ...), and refer to them in the text.\n"
+        "2. Map every marked requirement in the task to a section, and end with "
+        "a requirement checklist table (requirement, where it is addressed, "
+        "evidence) so the marker can find each item quickly.\n"
+        "3. For each task, explain what was done, why it was done that way, and "
+        "how it was verified. Show the essential commands or configuration in "
+        "short <pre><code> blocks, followed by one or two sentences that explain "
+        "what they do. Do not paste long logs; quote only the lines that prove "
+        "the result.\n"
+        "4. Explain how the deployed system works end to end: the request path "
+        "from the user's browser through DNS, any CDN or reverse proxy, TLS, "
+        "access control, the container, the application, storage, and the model "
+        "API. Draw it as a simple inline SVG diagram with labelled boxes and "
+        "arrows that fits the page width.\n"
+        "5. Use only evidence supplied in the task or prepared context: commands, "
+        "outputs, check-file contents, IP addresses, domains, versions, and "
+        "timestamps. Never invent results, numbers, or outputs. If a piece of "
+        "evidence is missing, say so plainly instead of guessing.\n"
+        "6. Never reveal secrets. Replace API keys, passwords, tokens, private "
+        "keys, and password hashes with [REDACTED], even if they appear in the "
+        "context.\n"
+        "7. For each screenshot the task asks for, insert a figure placeholder "
+        "exactly like <figure class=\"evidence\" data-evidence=\"ID\"><div "
+        "class=\"evidence-slot\">Screenshot: ID</div><figcaption>Figure N. "
+        "caption</figcaption></figure>, where ID is the screenshot identifier "
+        "given in the task (or a short kebab-case name if none is given) and the "
+        "caption states what the screenshot proves. Style .evidence-slot as a "
+        "bordered box about 90mm tall so the screenshot can be inserted later.\n"
+        "8. Security and cost analysis must be specific to the deployment: "
+        "exposed ports, firewall or security-group rules, TLS, access control, "
+        "secret storage, data persistence and backup, and the main recurring "
+        "costs with ways to reduce them.\n"
+        "9. Improvements must be concrete and prioritised (for example stronger "
+        "authentication, monitoring, backups, CI/CD, scaling), each with its "
+        "benefit and trade-off.\n"
+        "10. Write in clear, formal, concise English for a non-specialist "
+        "reader. Define each technical term the first time it is used. Respect "
+        "any page limit in the task; a 20-page limit means roughly 5,000 words "
+        "plus figures at most. Avoid page breaks inside figures, tables, and "
+        "code blocks."
     )
     output_instruction = (
         "Return one complete self-contained HTML document. It must start with "
@@ -162,6 +215,7 @@ def build_essay_html_prompt(
             "[Prepared Context]\n" + context_bundle.strip(),
             "[Search Citations]\n" + format_citations(search),
             "[Options]\n" + json.dumps(options, sort_keys=True),
+            "[Report Guidance]\n" + report_instruction,
             "[Output Contract]\n" + output_instruction,
         ]
     )

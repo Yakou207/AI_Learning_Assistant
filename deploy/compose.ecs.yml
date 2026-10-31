@@ -1,0 +1,34 @@
+# Cloud server deployment: runs the image built and transferred from the
+# local machine (no build on the server). Secrets stay in ./data on the server.
+#
+# Task 2 (direct-access test): AILA_BIND=0.0.0.0, firewall allows one source IP.
+# Task 3 (behind Nginx):       AILA_BIND=127.0.0.1, only the reverse proxy can reach it.
+services:
+  backend:
+    image: ${AILA_IMAGE:-ai-learning-assistant-backend:amd64}
+    restart: unless-stopped
+    ports:
+      - "${AILA_BIND:-127.0.0.1}:14242:14242"
+    environment:
+      APP_SQLITE_PATH: /app/data/app.sqlite
+      WORKSPACE_ROOT: /app/workspace
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-openai_compatible}
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      MODEL_NAME: ${MODEL_NAME:-qwen3.6-flash}
+      MODEL_CONTEXT_WINDOW: ${MODEL_CONTEXT_WINDOW:-1000000}
+      MODEL_SUPPORTS_STREAMING: ${MODEL_SUPPORTS_STREAMING:-true}
+      MODEL_KEY_ENCRYPTION_FILE: /app/data/model-key-encryption.key
+      MODEL_SECRET_FILE: /app/data/model-secrets.env
+    volumes:
+      - ./data:/app/data
+      - ./workspace:/app/workspace
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:14242/health', timeout=2).read()"
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s

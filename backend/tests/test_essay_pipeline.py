@@ -55,6 +55,8 @@ def test_essay_html_pipeline_writes_source_and_converted_pdf(
     assert mock_pdf_converter.calls[0]["page_config"].width == "210mm"
     assert "self-contained HTML document" in provider.requests[0].user_prompt
     assert "remote HTTP(S) assets" in provider.requests[0].user_prompt
+    assert "[Report Guidance]" in provider.requests[0].user_prompt
+    assert "[REDACTED]" in provider.requests[0].user_prompt
 
     manifest = json.loads((output_root / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["status"] == "succeeded"
