@@ -73,7 +73,9 @@ def output_token_budget(intent: str, options: dict[str, Any] | None = None) -> i
     if intent == "code_homework":
         return 4000
     if intent == "essay_latex":
-        return 6000
+        # Multi-page reports with inline CSS/SVG, plus reasoning tokens on
+        # reasoning models, do not fit in a short-essay budget.
+        return 24000
     if intent == "beamer_slides":
         return 7000
     if intent == "cheat_sheet":

@@ -253,3 +253,12 @@ def _write_blank_pdf(path):
     writer.add_blank_page(width=72, height=72)
     with path.open("wb") as file:
         writer.write(file)
+
+
+def test_essay_output_budget_fits_multi_page_report():
+    estimate = estimate_context_budget(
+        [ContextSection(name="task", text="Write a report.", kind="text")],
+        intent="essay_latex",
+    )
+
+    assert estimate.estimated_output_tokens >= 20000
